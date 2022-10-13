@@ -1,0 +1,26 @@
+name: cassandra
+
+channels:
+  - conda-forge
+
+dependencies:
+  # Base depends
+  - python=3.8
+  - pip
+  - numpy
+  - mosdef_cassandra
+  - mbuild
+  - foyer
+  - matplotlib
+  - unyt
+  - scipy
+  - garnett
+  - pycifrw
+  - jupyter
+  
+  # Pip-only installs
+  - pip:
+    # Documentation
+    # - rinohtype
+    # - sphinx-rtd-theme
+    # - pystemmer
