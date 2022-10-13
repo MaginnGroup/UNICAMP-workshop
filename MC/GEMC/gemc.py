@@ -7,22 +7,27 @@ import pandas as pd
 import subprocess
 from io import StringIO
 
+# We'll filter out warnings. This is to improve the
+# clarity of this tutorial. Please refrain to do this
+# if you are not completely sure what these mean.
+
+from warnings import filterwarnings
+filterwarnings('ignore', category=UserWarning)
+
 #########################################
 # We will conduct the following protocol:
-# 0. Setup system 
+# 0. Setup liquid system 
 # 1. NVT at 400 K
 # 2. NVT at 151 K
 # 3. NpT at 151 K
 # 4. GEMC at 151 K
 #########################################
 
-##########################
-# Step 0. Setup the system
-##########################
+#############################
+# Step 0. Setup liquid system
+#############################
 
 liq_mols = 350
-temperature = 400.0 * u.K
-simlength = 10000
 boxl = 3.0
 
 # Use mbuild to create a coarse-grained CH4 bead
@@ -41,12 +46,14 @@ typed_methane = trappe.apply(methane)
 # Step 1. NVT at 400 K
 ######################
 
+temperature = 400.0 * u.K
+simlength = 100000
+
 # Define the System
 nvt_system = mc.System([liquid_box], [typed_methane], mols_to_add=[[liq_mols]])
 # Define the MoveSet
 nvt_moveset = mc.MoveSet("nvt", [typed_methane])
 
-# Run a simulation at 300 K for 10000 MC moves
 mc.run(
     system=nvt_system,
     moveset=nvt_moveset,
@@ -57,10 +64,11 @@ mc.run(
 )
 
 ######################
-# Step 2. NVT at 171 K
+# Step 2. NVT at 175 K
 ######################
 
-temperature = 171.0 * u.K
+temperature = 175.0 * u.K
+simlength = 500000
 
 cmd = [
     "tail",
@@ -79,8 +87,6 @@ liquid_box = mbuild.formats.xyz.read_xyz("nvt2.initial.xyz")
 
 liquid_box.box = mbuild.Box(lengths=[boxl, boxl, boxl], angles=[90., 90., 90.])
 
-#liq_box.periodicity = [True, True, True]
-
 box_list = [liquid_box]
 
 species_list = [typed_methane]
@@ -89,7 +95,6 @@ mols_in_boxes = [[liq_mols]]
 
 nvt2_system = mc.System(box_list, species_list, mols_in_boxes=mols_in_boxes)
 
-# Run a simulation at 300 K for 10000 MC moves
 mc.run(
     system=nvt2_system,
     run_name="nvt2",
@@ -101,10 +106,11 @@ mc.run(
 )
 
 ######################
-# Step 2. NVT at 171 K
+# Step 2. NPT at 171 K
 ######################
 
 temperature = 175.0 * u.K
+simlength = 1000000
 pressure = 2830 * u.kilopascal
 
 cmd = [
@@ -123,8 +129,6 @@ with open("npt.initial.xyz", mode="w") as f:
 liquid_box = mbuild.formats.xyz.read_xyz("npt.initial.xyz")
 
 liquid_box.box = mbuild.Box(lengths=[boxl, boxl, boxl], angles=[90., 90., 90.])
-
-#liq_box.periodicity = [True, True, True]
 
 box_list = [liquid_box]
 
@@ -145,8 +149,6 @@ npt_moveset.prob_translate = (
     npt_moveset.prob_translate + orig_prob_volume - new_prob_volume
 )
 
-
-# Run a simulation at 300 K for 10000 MC moves
 mc.run(
     system=npt_system,
     moveset=npt_moveset,
@@ -162,6 +164,8 @@ mc.run(
 ##################
 
 vap_mols = 150
+temperature = 175.0 * u.K
+simlength = 5000000
 
 cmd = [
     "tail",
@@ -189,9 +193,10 @@ liquid_box.box = mbuild.Box(lengths=[boxl, boxl, boxl], angles=[90., 90., 90.])
 
 #liq_box.periodicity = [True, True, True]
 
-specific_volume = u.kb * temperature / pressure
-vap_volume = (specific_volume * vap_mols * u.Na.to("1/mol")).to("angstrom**3")
-boxl_vap = vap_volume ** (1.0/3.0)
+#specific_volume = u.kb * temperature / pressure
+#vap_volume = (specific_volume * vap_mols / u.Na.to("1/mole")).to("nanometer**3")
+#boxl_vap = vap_volume ** (1.0/3.0)
+boxl_vap = 6.0 * u.nanometer
 
 vap_box = mbuild.Box(lengths=[boxl_vap, boxl_vap, boxl_vap], angles=[90., 90., 90.])
 
