@@ -5,7 +5,8 @@ import unyt as u
 import numpy as np
 import pandas as pd
 import subprocess
-from io import StringIO
+from mosdef_cassandra.analysis import ThermoProps
+import matplotlib.pyplot as plt
 
 # We'll filter out warnings. This is to improve the
 # clarity of this tutorial. Please refrain to do this
@@ -64,10 +65,10 @@ mc.run(
 )
 
 ######################
-# Step 2. NVT at 175 K
+# Step 2. NVT at 151 K
 ######################
 
-temperature = 175.0 * u.K
+temperature = 151.0 * u.K
 simlength = 500000
 
 cmd = [
@@ -106,10 +107,10 @@ mc.run(
 )
 
 ######################
-# Step 2. NPT at 171 K
+# Step 2. NPT at 151 K
 ######################
 
-temperature = 175.0 * u.K
+temperature = 151.0 * u.K
 simlength = 3000000
 pressure = 2830 * u.kilopascal
 
@@ -160,11 +161,11 @@ mc.run(
 )
 
 ##################
-# 4. GEMC at 175 K
+# 4. GEMC at 151 K
 ##################
 
 vap_mols = 200
-temperature = 175.0 * u.K
+temperature = 151.0 * u.K
 simlength = 5000000
 
 cmd = [
@@ -244,8 +245,6 @@ custom_args = {}
 custom_args["properties"] = thermo_props
 custom_args["charge_style"] = "none"
 
-# Move into the job dir and start doing things
-
 mc.run(
     system=gemc_system,
     moveset=gemc_moveset,
@@ -254,3 +253,20 @@ mc.run(
     temperature=temperature,
     **custom_args
 )
+
+thermo = {}
+thermo[1] = ThermoProps(f"gemc.out.box1.prp")
+thermo[2] = ThermoProps(f"gemc.out.box2.prp")
+
+plt.plot(thermo[1].prop("MC_STEP"), thermo[1].prop("Mass_Density"), label="Liquid")
+plt.plot(thermo[2].prop("MC_STEP"), thermo[2].prop("Mass_Density"), label="Vapor")
+plt.xlabel("MC STEP")
+plt.ylabel("Density (kg/m$^3$)")
+
+plt.show()
+
+plt.plot(thermo[2].prop("MC_STEP"), thermo[2].prop("Pressure"), label="Vapor pressure")
+plt.xlabel("MC STEP")
+plt.ylabel("Pressure (bar)")
+
+plt.show()
