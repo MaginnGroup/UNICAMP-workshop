@@ -12,7 +12,6 @@ nmols = 50
 simlength = 100000
 
 # Use mbuild to create molecules
-#methane = mbuild.load("CC", smiles=True)
 ethanol = mbuild.load("ethanol.mol2")
 
 # Create an empty mbuild.Box
@@ -59,5 +58,5 @@ steps = thermo.prop("MC_STEP")
 plt.plot(steps, density, label="Density")
 plt.title("NPT TraPPE-UA Ethanol @ 300 K")
 plt.xlabel("MC STEPS")
-plt.ylabel("Density (kg/m$^3$")
+plt.ylabel("Density (kg/m$^3$)")
 plt.show()
