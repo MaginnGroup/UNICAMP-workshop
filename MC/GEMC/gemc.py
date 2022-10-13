@@ -21,7 +21,6 @@ from io import StringIO
 ##########################
 
 liq_mols = 350
-vap_mols = 150
 temperature = 400.0 * u.K
 simlength = 10000
 boxl = 3.0
@@ -29,10 +28,8 @@ boxl = 3.0
 # Use mbuild to create a coarse-grained CH4 bead
 methane = mbuild.Compound(name="_CH4")
 
-# Create two empty mbuild.Box
-# (vapor = larger, liquid = smaller)
+# Create the liquid mbuild.Box
 liquid_box = mbuild.Box(lengths=[boxl, boxl, boxl])
-vapor_box = mbuild.Box(lengths=[4.0, 4.0, 4.0])
 
 # Load force field
 trappe = foyer.forcefields.load_TRAPPE_UA()
@@ -164,6 +161,8 @@ mc.run(
 # 4. GEMC at 175 K
 ##################
 
+vap_mols = 150
+
 cmd = [
     "tail",
     "-n",
@@ -250,61 +249,3 @@ mc.run(
     temperature=temperature,
     **custom_args
 )
-
-
-
-
-## Create box and species list
-#box_list = [liquid_box, vapor_box]
-#species_list = [typed_methane]
-#
-#mols_to_add = [[350], [100]]
-#
-#system = mc.System(box_list, species_list, mols_to_add=mols_to_add)
-#moveset = mc.MoveSet("gemc", species_list)
-#
-#moveset.prob_volume = 0.010
-#moveset.prob_swap = 0.11
-#
-#thermo_props = [
-#    "energy_total",
-#    "energy_intervdw",
-#    "pressure",
-#    "volume",
-#    "nmols",
-#    "mass_density",
-#]
-#
-#custom_args = {
-#    "run_name": "equil",
-#    "charge_style": "none",
-#    "rcut_min": 2.0 * u.angstrom,
-#    "vdw_cutoff": 14.0 * u.angstrom,
-#    "units": "sweeps",
-#    "steps_per_sweep": 450,
-#    "coord_freq": 50,
-#    "prop_freq": 10,
-#    "properties": thermo_props,
-#}
-#
-#mc.run(
-#    system=system,
-#    moveset=moveset,
-#    run_type="equilibration",
-#    run_length=250,
-#    temperature=151.0 * u.K,
-#    **custom_args,
-#)
-#
-## Update run_name and restart_name
-#custom_args["run_name"] = "prod"
-#custom_args["restart_name"] = "equil"
-#
-#mc.restart(
-#    system=system,
-#    moveset=moveset,
-#    run_type="production",
-#    run_length=750,
-#    temperature=151.0 * u.K,
-#    **custom_args,
-#)
