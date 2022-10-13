@@ -192,8 +192,6 @@ liquid_box = mbuild.formats.xyz.read_xyz("gemc.initial.xyz")
 
 liquid_box.box = mbuild.Box(lengths=[boxl, boxl, boxl], angles=[90., 90., 90.])
 
-#liq_box.periodicity = [True, True, True]
-
 #specific_volume = u.kb * temperature / pressure
 #vap_volume = (specific_volume * vap_mols / u.Na.to("1/mole")).to("nanometer**3")
 #boxl_vap = vap_volume ** (1.0/3.0)
@@ -240,7 +238,6 @@ thermo_props = [
 ]
 
 # Define custom args
-
 custom_args = {}
 custom_args["properties"] = thermo_props
 custom_args["charge_style"] = "none"
