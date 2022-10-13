@@ -9,6 +9,7 @@ dependencies:
   - pip
   - numpy
   - mosdef_cassandra
+  - cassandra=1.2.5
   - mbuild
   - foyer
   - matplotlib
