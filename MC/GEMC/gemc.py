@@ -27,7 +27,7 @@ filterwarnings('ignore', category=UserWarning)
 # Step 0. Setup liquid system
 #############################
 
-liq_mols = 350
+liq_mols = 550
 boxl = 3.0
 
 # Use mbuild to create a coarse-grained CH4 bead
@@ -110,7 +110,7 @@ mc.run(
 ######################
 
 temperature = 175.0 * u.K
-simlength = 1000000
+simlength = 5000000
 pressure = 2830 * u.kilopascal
 
 cmd = [
@@ -163,7 +163,7 @@ mc.run(
 # 4. GEMC at 175 K
 ##################
 
-vap_mols = 150
+vap_mols = 50
 temperature = 175.0 * u.K
 simlength = 5000000
 
@@ -196,7 +196,7 @@ liquid_box.box = mbuild.Box(lengths=[boxl, boxl, boxl], angles=[90., 90., 90.])
 #specific_volume = u.kb * temperature / pressure
 #vap_volume = (specific_volume * vap_mols / u.Na.to("1/mole")).to("nanometer**3")
 #boxl_vap = vap_volume ** (1.0/3.0)
-boxl_vap = 6.0 * u.nanometer
+boxl_vap = 9.0 * u.nanometer
 
 vap_box = mbuild.Box(lengths=[boxl_vap, boxl_vap, boxl_vap], angles=[90., 90., 90.])
 
