@@ -12,12 +12,17 @@ import matplotlib.pyplot as plt
 from warnings import filterwarnings
 filterwarnings('ignore', category=UserWarning)
 
+# Simulation settings
 nmols = 50
+temperature = 300
+boxl = 3.0
+simlength = 100000
+
 # Use mBuild to create a methane molecule
 methane = mbuild.load("C", smiles=True)
 
 # Create an empty mbuild.Box
-box = mbuild.Box(lengths=[3.0, 3.0, 3.0])
+box = mbuild.Box(lengths=[boxl, boxl, boxl])
 
 # Load force field
 oplsaa = foyer.forcefields.load_OPLSAA()
@@ -42,8 +47,8 @@ mc.run(
     system=system,
     moveset=moveset,
     run_type="equilibration",
-    run_length=10000,
-    temperature=300.0 * u.K,
+    run_length=simlength,
+    temperature=temperature * u.K,
 )
 
 thermo = ThermoProps(f"nvt.out.prp")
