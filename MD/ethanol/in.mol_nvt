@@ -1,0 +1,71 @@
+# User input information
+variable        NAME index mol               # The prefix of the log and LAMMPS dump file names
+log             ${NAME}.log
+variable        infile index restart.npt.data    # The name of the LAMMPS input data file
+variable        mytemp index 298.00          # The simulation temperature
+
+variable        xyzfreq index 1000           # The output frequency of coordinate information
+variable        thermofreq index 1000        # The output frequency of property information
+variable        simlength index 1000000 # Simulation run length  (in timesteps)
+
+variable        restartfreq index 5000       # The output frequency of restart files 
+
+# Properties to output
+variable        density equal density
+variable        temp equal temp
+variable        press equal press
+variable        ke equal ke 
+variable        pe equal pe
+variable        etotal equal etotal 
+variable        enthalpy equal enthalpy
+
+# Simulation settings 
+# the following information is saved to restart files
+units           real 
+atom_style      full
+boundary        p p p
+pair_style      lj/cut/coul/long 12
+kspace_style    ewald 0.0001
+pair_modify     tail yes
+pair_modify     mix arithmetic
+special_bonds   lj/coul 0.0 0.0 0.5
+
+bond_style      harmonic
+angle_style     harmonic
+dihedral_style  opls 
+# improper_style  cvff  
+
+read_data       ${infile}
+
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes page 1000000 one 20000 
+timestep        1.0
+
+## end information that is saved to restart files
+
+## create velocity profile
+velocity        all create  ${mytemp} 314159265 units box
+velocity        all zero linear units box
+
+thermo_style    custom step vol temp press ke pe etotal enthalpy evdwl ecoul epair ebond eangle edihed eimp emol elong etail lx ly lz xy xz yz density
+
+################
+# NVT PRODUCTION 
+################
+
+dump            dump all custom ${xyzfreq} ${NAME}.nvt.lammpstrj id type x y z mol
+dump            dumpxyz all xyz ${xyzfreq} ${NAME}.nvt.xyz
+dump_modify     dumpxyz element C H O H C
+fix             aveprop all ave/time 1 1 ${thermofreq} v_density v_temp v_press v_ke v_pe v_etotal v_enthalpy file properties.nvt.dat 
+thermo          ${thermofreq}
+
+fix             NVT all nvt temp ${mytemp} ${mytemp} 100.0 
+restart         ${restartfreq} restart.${NAME}.1 restart.${NAME}.2
+run             ${simlength}
+
+##################################
+# WRITE LAST DATA DATAFILE TO DISK
+##################################
+
+write_restart   restart.nvt.${NAME}
+write_data      restart.nvt.data

@@ -1,0 +1,25 @@
+generate_datafile.py
+--------------------
+
+This file will create a new LAMMPS configuration
+of ethanol using the OPLS force field.
+
+plot.py
+-------
+
+This file will plot the output the density, rdf 
+and msd for a given temperature. Note that
+you might need to tweak it to account for different
+temperatures and file names
+
+scriptfile.submit
+-----------------
+
+The submission script to the CRC clusters.
+You will need to input your netID
+
+in.mol_npt, in.mol_nvt
+----------------------
+
+These are the LAMMPS input files that you
+will need.
