@@ -2,8 +2,22 @@ import mbuild
 import foyer
 import mosdef_cassandra as mc
 import unyt as u
+import numpy as np
+import os
+from mosdef_cassandra.utils.tempdir import temporary_cd
+from mosdef_cassandra.analysis import ThermoProps
+import matplotlib.pyplot as plt
+from scipy.stats import linregress
 
 temperature = 308.0 * u.K
+
+methane = mbuild.Compound(name='_CH4')
+
+# Load force field
+trappe = foyer.forcefields.load_TRAPPE_UA()
+
+# Use foyer to apply force field
+methane_typed = trappe.apply(methane)
 
 custom_args = {
     "charge_style" : "none",
@@ -46,6 +60,11 @@ for mu_adsorbate in mus_adsorbate:
     thermo = ThermoProps(dirname + "/gcmc.out.prp")
     pressures.append(np.mean(thermo.prop("Pressure", start=30000)))
     plt.plot(thermo.prop("MC_STEP"), thermo.prop("Pressure").to("MPa"))
+plt.title("Pressure equilibration")
+plt.xlabel("MC Step")
+plt.ylabel("Pressure (MPa)")
+plt.show()
+
 plt.title("Pressure equilibration")
 plt.xlabel("MC Step")
 plt.ylabel("Pressure (MPa)")
