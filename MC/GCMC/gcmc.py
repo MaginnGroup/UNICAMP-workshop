@@ -3,89 +3,73 @@ import foyer
 import mosdef_cassandra as mc
 import unyt as u
 import numpy as np
-import os
-from mosdef_cassandra.utils.tempdir import temporary_cd
-from mosdef_cassandra.analysis import ThermoProps
 import matplotlib.pyplot as plt
-from scipy.stats import linregress
+from mosdef_cassandra.analysis import ThermoProps
 
-temperature = 308.0 * u.K
+from warnings import filterwarnings
+filterwarnings('ignore', category=UserWarning)
 
-methane = mbuild.Compound(name='_CH4')
+chemical_potential = -27.64 * (u.kJ / u.mol)
 
-# Load force field
-trappe = foyer.forcefields.load_TRAPPE_UA()
+n_unitcells = 12
 
-# Use foyer to apply force field
-methane_typed = trappe.apply(methane)
+lattice = mbuild.lattice.load_cif("MFI_SI.cif")
 
-custom_args = {
-    "charge_style" : "none",
-    "vdw_cutoff" : 14.0 * u.angstrom,
-    "prop_freq" : 10,
+compound_dict = {
+    "Si4+": mbuild.Compound(name="Si"),
+    "O2-": mbuild.Compound(name="O"),
 }
 
+mfi = lattice.populate(compound_dict, 2, 2, 3)
 
-mus_adsorbate = np.arange(-46, -25, 3) * u.kJ/u.mol
+#Create a coarse-grained methane
+methane = mbuild.Compound(name="_CH4")
 
-for mu_adsorbate in mus_adsorbate:
-    dirname = f'pure_mu_{mu_adsorbate:.1f}'.replace(" ", "_").replace("/", "-")
-    if not os.path.isdir(dirname):
-        os.mkdir(dirname)
-    else:
-        pass
-    with temporary_cd(dirname):
-        species_list = [methane_typed]
-        if mu_adsorbate < -34:
-            boxl = 20. # nm
-        else:
-            boxl = 5. # nm
-        box_list = [mbuild.Box([boxl,boxl,boxl])]
-        system = mc.System(box_list, species_list)
-        moveset = mc.MoveSet('gcmc', species_list)
+# Load forcefields
+trappe_zeo = foyer.Forcefield("trappe_zeo.xml")
+trappe = foyer.forcefields.load_TRAPPE_UA()
 
-        mc.run(
-            system=system,
-            moveset=moveset,
-            run_type="equil",
-            run_length=100000,
-            temperature=temperature,
-            chemical_potentials = [mu_adsorbate],
-            **custom_args
-        )
+# Use foyer to apply forcefields
+mfi_ff = trappe_zeo.apply(mfi)
+methane_ff = trappe.apply(methane)
 
-pressures = []
-for mu_adsorbate in mus_adsorbate:
-    dirname = f'pure_mu_{mu_adsorbate:.1f}'.replace(" ", "_").replace("/", "-")
-    thermo = ThermoProps(dirname + "/gcmc.out.prp")
-    pressures.append(np.mean(thermo.prop("Pressure", start=30000)))
-    plt.plot(thermo.prop("MC_STEP"), thermo.prop("Pressure").to("MPa"))
-plt.title("Pressure equilibration")
+# Create box and species list
+box_list = [mfi]
+species_list = [mfi_ff, methane_ff]
+
+# Since we have an occupied box we need to specify
+# the number of each species present in the intial config
+mols_in_boxes = [[1, 0]]
+
+system = mc.System(box_list, species_list, mols_in_boxes=mols_in_boxes)
+moveset = mc.MoveSet("gcmc", species_list)
+
+default_args = {
+    "chemical_potentials": ["none", chemical_potential],
+    "rcut_min": 0.5 * u.angstrom,
+    "vdw_cutoff": 14.0 * u.angstrom,
+    "charge_cutoff": 14.0 * u.angstrom,
+    "coord_freq": 1000,
+    "prop_freq": 1000,
+}
+
+# Combine default/custom args and override default
+mc.run(
+    system=system,
+    moveset=moveset,
+    run_type="equilibration",
+    run_length=100000,
+    temperature=308.0 * u.K,
+    **default_args,
+)
+
+loading = []
+thermo = ThermoProps("./gcmc.out.prp")
+plt.plot(thermo.prop("MC_STEP"), thermo.prop("Nmols_2") / n_unitcells, label="Simulations")
+nmols_uc = thermo.prop("Nmols_2", start=30000) / n_unitcells
+plt.axhline(y=np.mean(nmols_uc), color='r', linestyle='-', label='Mean')
+plt.title(f"GCMC TraPPE Methane @ $\mu$ = {chemical_potential}, \n Mean = {np.round(np.mean(nmols_uc).value, 2)} molecules")
 plt.xlabel("MC Step")
-plt.ylabel("Pressure (MPa)")
+plt.ylabel("Molecules / uc")
+plt.legend(loc=4)
 plt.show()
-
-plt.title("Pressure equilibration")
-plt.xlabel("MC Step")
-plt.ylabel("Pressure (MPa)")
-plt.plot(mus_adsorbate, pressures, 'go-')
-plt.xlabel("Chemical potential (kJ/mol)")
-plt.ylabel("Pressure [bar]")
-plt.yscale('log')
-slope, intercept, r_value, p_value, stderr = linregress(np.log(pressures).flatten(),y=mus_adsorbate.flatten())
-plt.show()
-
-pressures = [
-    6000   ,
-    22100  ,
-    49180  ,
-    121800 ,
-    316800 ,
-    839700 ,
-    2243000,
-    6000000
-] * u.Pa
-
-mus = (slope * np.log(pressures.in_units(u.bar)) + intercept) * u.kJ/u.mol
-for (mu, pressure) in zip(mus, pressures):
-    print(f"We will run at mu = {mu:0.2f} to simulate {pressure:0.0f}")
