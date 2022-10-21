@@ -68,7 +68,7 @@ annotation = "Figure 1. Ethanol density at 298K"
 plt.annotate(annotation, (0,0), (-150, -40), xycoords='axes points', textcoords='offset points', va='top')
 
 # Print the mean of the density
-print(density_mean)
+print("Density mean: ", density_mean)
 
 #####################################
 # Create a new plot (fig2, ax2) that  
@@ -84,11 +84,11 @@ ax2.set_ylabel('$g(r)$')
 # and use the json library to parse its
 # content
 
-with open("ethanol.json", mode="r") as f:
+with open("etoh.json", mode="r") as f:
     rdf = json.load(f)
 
 # Plot the RDF
-ax2.plot(rdf["RDF"]["distance"], rdf["RDF"]["ETH-ETH"], '-', color="black", label="RDF")
+ax2.plot(rdf["RDF"]["distance"], rdf["RDF"]["etoh-etoh"], '-', color="black", label="RDF")
 
 #####################################
 # Create a new plot (fig3, ax3) that  
@@ -99,7 +99,7 @@ fig3, ax3 = plt.subplots(1, 1)
 ax3.set_xlabel(r'Time (ps)')
 ax3.set_ylabel('MSD')
 
-with open("ethanol.msd.json", mode="r") as f:
+with open("etoh.json", mode="r") as f:
     msd = json.load(f)
 
 # The time in PyLAT is in fs. The x axis of 
@@ -108,7 +108,7 @@ with open("ethanol.msd.json", mode="r") as f:
 
 time = np.array(msd["MSD"]["time"]) / 1000.0
 
-ax3.plot(time, msd["MSD"]["ETH"], '-', color="black", label="MSD")
+ax3.plot(time, msd["MSD"]["etoh"], '-', color="black", label="MSD")
 ax3.set_xlim([0, 10])
 ax3.set_ylim([0, 10])
 
