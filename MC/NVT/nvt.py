@@ -54,9 +54,16 @@ mc.run(
 thermo = ThermoProps(f"nvt.out.prp")
 energy = thermo.prop("Energy_Total") / nmols
 pressure = thermo.prop("Pressure")
+
 steps = thermo.prop("MC_STEP")
 plt.plot(steps, energy, label="Total System Energy")
 plt.title("NVT OPLS Methane @ 300 K")
 plt.xlabel("MC STEPS")
 plt.ylabel("Total Energy (kJ/mol)")
+plt.show()
+
+plt.plot(steps, pressure, label="Total System Pressure")
+plt.title("NVT OPLS Methane @ 300 K")
+plt.xlabel("MC STEPS")
+plt.ylabel("Pressure (bar)")
 plt.show()
