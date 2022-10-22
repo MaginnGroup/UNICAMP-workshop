@@ -5,11 +5,18 @@ from mosdef_cassandra.analysis import ThermoProps
 import unyt as u
 import matplotlib.pyplot as plt
 
-temperature = 300.0
-pressure = 1.0
+# We'll filter out warnings. This is to improve the
+# clarity of this tutorial. Please refrain to do this
+# if you are not completely sure what these mean.
+
+from warnings import filterwarnings
+filterwarnings('ignore', category=UserWarning)
+
+temperature = 400.0
+pressure = 5.39
 boxl = 3.0
-nmols = 50
-simlength = 100000
+nmols = 200
+simlength = 3000000
 
 # Use mbuild to create molecules
 ethanol = mbuild.load("ethanol.mol2")
@@ -42,21 +49,28 @@ custom_args = {
     "pressure": pressure * u.bar,
 }
 
-# Run a simulation with at 300 K with 10000 MC moves
+# Run a simulation with at 400 K with 3E6 MC moves
+
+# Damped shifted force for fast electrostatics
+
 mc.run(
     system=system,
     moveset=moveset,
+    charge_style="dsf",
+    dsf_damping=0.2,
     run_type="equilibration",
     run_length=simlength,
     temperature=temperature * u.K,
     **custom_args,
 )
 
-thermo = ThermoProps(f"npt.out.prp")
-density = thermo.prop("Mass_Density")
-steps = thermo.prop("MC_STEP")
-plt.plot(steps, density, label="Density")
-plt.title("NPT TraPPE-UA Ethanol @ 300 K")
-plt.xlabel("MC STEPS")
-plt.ylabel("Density (kg/m$^3$)")
-plt.show()
+# Ewald summation
+
+#mc.run(
+#    system=system,
+#    moveset=moveset,
+#    run_type="equilibration",
+#    run_length=simlength,
+#    temperature=temperature * u.K,
+#    **custom_args,
+#)
