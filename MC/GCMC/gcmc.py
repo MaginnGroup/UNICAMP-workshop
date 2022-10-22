@@ -9,17 +9,24 @@ from mosdef_cassandra.analysis import ThermoProps
 from warnings import filterwarnings
 filterwarnings('ignore', category=UserWarning)
 
+# Let us pick a chemical potential and temperature
 chemical_potential = -27.64 * (u.kJ / u.mol)
+temperature = 308.0 * u.K
 
+# Define the size of the supercell
 n_unitcells = 12
 
+# This is the CIF for MFI framework
 lattice = mbuild.lattice.load_cif("MFI_SI.cif")
 
+# Construct a map of elements in the CIF
+# to mbuild compounds
 compound_dict = {
     "Si4+": mbuild.Compound(name="Si"),
     "O2-": mbuild.Compound(name="O"),
 }
 
+# Create the supercell
 mfi = lattice.populate(compound_dict, 2, 2, 3)
 
 #Create a coarse-grained methane
@@ -59,15 +66,24 @@ mc.run(
     moveset=moveset,
     run_type="equilibration",
     run_length=100000,
-    temperature=308.0 * u.K,
+    temperature=temperature,
     **default_args,
 )
 
-loading = []
+# Plot the results
+
+# Load the property file into a ThemoProps object
 thermo = ThermoProps("./gcmc.out.prp")
+
+# Plot the MC steps vs Molecules/UC
 plt.plot(thermo.prop("MC_STEP"), thermo.prop("Nmols_2") / n_unitcells, label="Simulations")
+
+# Trim the portion of the simulation that is not equilibrated
 nmols_uc = thermo.prop("Nmols_2", start=30000) / n_unitcells
+
+# Plot the mean of our simulation
 plt.axhline(y=np.mean(nmols_uc), color='r', linestyle='-', label='Mean')
+
 plt.title(f"GCMC TraPPE Methane @ $\mu$ = {chemical_potential}, \n Mean = {np.round(np.mean(nmols_uc).value, 2)} molecules")
 plt.xlabel("MC Step")
 plt.ylabel("Molecules / uc")

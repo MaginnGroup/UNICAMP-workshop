@@ -11,6 +11,7 @@ from scipy.stats import linregress
 
 temperature = 308.0 * u.K
 
+# We will build a simple sphere with name _CH4
 methane = mbuild.Compound(name='_CH4')
 
 # Load force field
@@ -19,41 +20,52 @@ trappe = foyer.forcefields.load_TRAPPE_UA()
 # Use foyer to apply force field
 methane_typed = trappe.apply(methane)
 
+# Set some simulation settings for simulation
 custom_args = {
     "charge_style" : "none",
     "vdw_cutoff" : 14.0 * u.angstrom,
     "prop_freq" : 10,
 }
 
-
+# Define the range of chemical potentials that will
+# be used in the gas phase calculation.
 mus_adsorbate = np.arange(-46, -25, 3) * u.kJ/u.mol
 
-#for mu_adsorbate in mus_adsorbate:
-#    dirname = f'pure_mu_{mu_adsorbate:.1f}'.replace(" ", "_").replace("/", "-")
-#    if not os.path.isdir(dirname):
-#        os.mkdir(dirname)
-#    else:
-#        pass
-#    with temporary_cd(dirname):
-#        species_list = [methane_typed]
-#        if mu_adsorbate < -34:
-#            boxl = 20. # nm
-#        else:
-#            boxl = 5. # nm
-#        box_list = [mbuild.Box([boxl,boxl,boxl])]
-#        system = mc.System(box_list, species_list)
-#        moveset = mc.MoveSet('gcmc', species_list)
-#
-#        mc.run(
-#            system=system,
-#            moveset=moveset,
-#            run_type="equil",
-#            run_length=100000,
-#            temperature=temperature,
-#            chemical_potentials = [mu_adsorbate],
-#            **custom_args
-#        )
-#
+# This loop will create a directory for each
+# chemical potential. In each folder, a simulation
+# will be run with box sizes whose box length
+# is appropriate to yield enough molecules
+# to have an accurate pressure measurement
+
+for mu_adsorbate in mus_adsorbate:
+    dirname = f'pure_mu_{mu_adsorbate:.1f}'.replace(" ", "_").replace("/", "-")
+    if not os.path.isdir(dirname):
+        os.mkdir(dirname)
+    else:
+        pass
+    with temporary_cd(dirname):
+        species_list = [methane_typed]
+        if mu_adsorbate < -34:
+            boxl = 20. # nm
+        else:
+            boxl = 5. # nm
+        box_list = [mbuild.Box([boxl,boxl,boxl])]
+        system = mc.System(box_list, species_list)
+        moveset = mc.MoveSet('gcmc', species_list)
+
+        mc.run(
+            system=system,
+            moveset=moveset,
+            run_type="equil",
+            run_length=100000,
+            temperature=temperature,
+            chemical_potentials = [mu_adsorbate],
+            **custom_args
+        )
+
+# Let us plot the pressure as a function of steps
+# for each chemical potential
+
 pressures = []
 for mu_adsorbate in mus_adsorbate:
     dirname = f'pure_mu_{mu_adsorbate:.1f}'.replace(" ", "_").replace("/", "-")
@@ -66,6 +78,9 @@ plt.xlabel("MC Step")
 plt.ylabel("Pressure (bar)")
 plt.show()
 
+# Let us plot the pressure fit as a function
+# of chemical potential
+
 plt.title("Pressure equilibration")
 plt.xlabel("MC Step")
 plt.ylabel("Pressure (bar)")
@@ -75,6 +90,9 @@ plt.ylabel("Pressure [bar]")
 plt.yscale('log')
 slope, intercept, r_value, p_value, stderr = linregress(np.log(pressures).flatten(),y=mus_adsorbate.flatten())
 plt.show()
+
+# These are the pressures we will run our
+# adsorption calculations
 
 pressures = [
     6000   ,
