@@ -1,0 +1,61 @@
+# Example 1:
+# Two LJ atoms in a sphere with LJ walls
+
+# set name for this simulation
+variable NAME index example1 # name style value
+
+# set log file name. ${NAME} is the name you gave above.
+# This will append "log" to it so have a logfile of the run.
+log ${NAME}.log
+
+# configure and initialize system
+units lj   # Lennard-Jones reduced units (not real)
+atom_style atomic    # Simple atoms
+boundary f f f # x y z (f = fixed boundary conditions)
+
+# Define the region of the simulation andx then create
+# the simulation box
+region MYBOX sphere 0 0 0 5 units box
+create_box 1 MYBOX # number_of_atom_types region_ID
+
+# Create the atoms and place them at a given position
+create_atoms 1 single 0 2.0 0 units box # atom_type style args
+create_atoms 1 single 0 -2.0 0 units box # second symmetric atom, non-ergodic
+#create_atoms 1 single 0 -1.0 0 units box # second asymmetric atom, ergodic
+
+mass 1 1.0 # atom_type mass
+
+# explicitly set atom velocities, use box units, do *not* zero total momentum
+velocity all set 1 0 0 units box mom no # group_ID style args keyword value
+
+# set forcefield parameters
+pair_style lj/cut 2.5 # style args(=cutoff)
+pair_coeff 1 1 1.0 1.0 2.5 # atom_i atom_j args(=epsilon,sigma,cutoff)
+#pair_coeff 1 1 1.0 1.0 1.0 # repulsive only
+
+# create a spherical wall to contain the atom(s)
+fix SPHERE all wall/region MYBOX lj126 1.0 1.0 2.5 # fix_ID group_ID style args
+#fix SPHERE all wall/region MYBOX lj126 1.0 1.0 1.0 # repulsive only
+
+# include potential energy of wall fix in thermo 'pe' output
+fix_modify SPHERE energy yes # fix_ID keyword value
+
+# configure neighbor lists
+neighbor 0.3 bin
+neigh_modify every 20 delay 0 check no
+
+# configure integrator
+fix NVE all nve # fix_ID group_ID style
+timestep 0.003 # The default timestep size is 0.005 for LJ units.
+
+# configure output of atom-specific trajectory data (e.g. coordinates)
+dump DUMP all atom 50 ${NAME}.lammpstrj # dump_ID group_ID style interval file args
+
+# configure output of system property data
+thermo_style custom step temp press pe ke etotal
+thermo 1000 # output_interval
+
+# run simulation
+run 100000 # number_of_steps
+write_restart ${NAME}.restart.*
+
