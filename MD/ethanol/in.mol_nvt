@@ -6,7 +6,7 @@
 # User input information
 variable        NAME index mol               # The prefix of the log and LAMMPS dump file names
 log             ${NAME}.log
-variable        infile index restart.npt.data    # The name of the LAMMPS input data file
+variable        infile index restart.npt.reference.data    # The name of the LAMMPS input data file
 variable        mytemp index 298.00          # The simulation temperature K
 
 # Note we do NOT set pressure - we are running NVT
