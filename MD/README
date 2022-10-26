@@ -1,1 +1,13 @@
-This is the readme
+These are the two directories containing materials for the MD portion of the workshop.
+
+We will start with LJ-Examples, where we will cover the basics of LAMMPS use
+on simple, short simulations of the Lennard-Jones fluid.
+
+The ethanol directory contains scripts and example input files for conducting
+an NPT equilibration of an OPLS-AA model of ethanol at 298K and 1 atm. Once the
+density is determines, an NVT simulation is run at that density. The output of
+this is used by PyLAT to compute the self-diffusivity and radial distribution
+function.
+
+Setup of the ethanol system (creation of the LAMMPS data file) is made possible
+by MoSDeF tools mbuild and foyer.
