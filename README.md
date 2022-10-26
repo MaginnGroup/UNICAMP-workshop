@@ -175,7 +175,7 @@ The second command will run the import mbuild command in Python. If everything w
 message like:
 
 ```
-Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.)
+Warning: importing 'simtk.openmm' is deprecated.  Import 'openmm' instead.
 ```
 
 You can safely ignore this particular warning message. 
