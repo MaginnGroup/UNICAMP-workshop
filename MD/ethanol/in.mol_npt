@@ -22,6 +22,9 @@ variable        ke equal ke
 variable        pe equal pe
 variable        etotal equal etotal 
 variable        enthalpy equal enthalpy
+variable        lx equal lx
+variable        ly equal ly
+variable        lz equal lz
 
 # Simulation settings 
 # the following information is saved to restart files
@@ -68,7 +71,7 @@ dump_modify     dumpxyz element C H O H C
 
 # Tell LAMMPS to create a table of instantaneous properties for convenience.
 # We can analyze this file without having to parse the log file
-fix             aveprop all ave/time 1 1 ${thermofreq} v_density v_temp v_press v_ke v_pe v_etotal v_enthalpy file properties.npt.dat
+fix             aveprop all ave/time 1 1 ${thermofreq} v_density v_temp v_press v_ke v_pe v_etotal v_enthalpy v_lx v_ly v_lz file properties.npt.dat
 
 # How often to collect thermo properties and print in log file
 thermo          ${thermofreq}
