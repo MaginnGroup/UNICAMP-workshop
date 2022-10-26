@@ -58,4 +58,7 @@ ax.axhline(y=mean_reference, color="r", linestyle="-", label="Reference")
 ax.legend(loc="best")
 ax.yaxis.set_label_position("left")
 
+print(f"Average density: {mean_density} g / cm ** 3")
+print(f"Average box length: {np.mean(data_npt[half_idx :, 8])} angstroms")
+
 plt.show()
