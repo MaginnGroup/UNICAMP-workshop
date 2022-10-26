@@ -1,0 +1,53 @@
+# Example 2
+# 3d Lennard-Jones melt starting from fcc lattice
+
+# set name for this simulation
+variable NAME index example2 # name style value
+
+# set log file name
+log ${NAME}.log
+
+# configure and initialize system
+units lj
+atom_style atomic
+pair_style lj/cut 2.5 # style args(=cutoff)
+boundary s s s # x y z (s = shrink wrapped boundary conditions)
+
+# Create LJ atoms in an fcc lattice at LJ density N/V
+lattice fcc 0.8442 # style scale(=reduced_density)
+
+# Define our region and box on (0,10) in 3 directions. 
+region MYBOX block 0 10 0 10 0 10 # ID style args(=xlo,xhi,ylo,yhi,zlo,zhi)
+create_box 1 MYBOX # number_of_atom_types region_ID
+
+# Create the atoms. LAMMPS will figure out how many based on box size
+# and density we gave it
+create_atoms 1 box # atom_type style args
+
+# Assign the mass and velosities to all atoms
+mass 1 1.0 # atom_type mass
+velocity all create 3.0 87287 # group_ID style args(=temp,seed)
+
+# set forcefield parameters
+pair_coeff 1 1 1.0 1.0 2.5 # atom_i atom_j args(=epsilon,sigma,cutoff)
+
+# configure neighbor lists
+neighbor 0.3 bin
+neigh_modify every 20 delay 0 check no
+
+# configure integrator - this will be velocity Verlet
+fix NVE all nve # ID group_ID style
+timestep 0.003 # The default timestep size is 0.005 for LJ units.
+
+# dump all atoms 
+dump DUMP all atom 50 ${NAME}.lammpstrj # dump_ID group_ID style interval file args
+#dump_modify DUMP image yes # dump_ID keyword value
+
+# configure output of system property data
+thermo_style custom step temp press pe ke etotal
+thermo 50 # output_interval
+
+# run simulation
+run 10000 # number_of_steps
+write_restart ${NAME}.restart.*
+
