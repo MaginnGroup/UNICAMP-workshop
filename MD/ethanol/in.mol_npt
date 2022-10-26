@@ -1,13 +1,16 @@
+###################################################################
+# This is a LAMMPS input file to run an NPT simulation of ethanol.
+###################################################################
 # User input information
 variable        NAME index mol               # The prefix of the log and LAMMPS dump file names
 log             ${NAME}.log
 variable        infile index ethanol.data    # The name of the LAMMPS input data file
-variable        mytemp index 298.00          # The simulation temperature
-variable        mypress index 1.0            # The simulation pressure (for NpT)
+variable        mytemp index 298.00          # The simulation temperature in K
+variable        mypress index 1.0            # The simulation pressure (for NpT) in atm
 
 variable        xyzfreq index 1000           # The output frequency of coordinate information
 variable        thermofreq index 1000        # The output frequency of property information
-variable        simlength index 500000       # Simulation run length  (in timesteps)
+variable        simlength index 10000       # Simulation run length  (in timesteps)
 
 variable        restartfreq index 5000       # The output frequency of restart files 
 
@@ -34,13 +37,12 @@ special_bonds   lj/coul 0.0 0.0 0.5
 bond_style      harmonic
 angle_style     harmonic
 dihedral_style  opls 
-# improper_style  cvff  
 
 read_data       ${infile}
 
 neighbor        2.0 bin
 neigh_modify    delay 0 every 1 check yes page 1000000 one 20000 
-timestep        1.0
+timestep        1.0          # Time step in fs
 
 ## end information that is saved to restart files
 
@@ -54,22 +56,38 @@ thermo_style    custom step vol temp press ke pe etotal enthalpy evdwl ecoul epa
 # NPT EQUILIBRATION
 ###################
 
+# Create a trajectory file that PyLAT can read
 dump            dump all custom ${xyzfreq} ${NAME}.npt.lammpstrj id type x y z mol
+
+# Create an xyz file OVITO can read
 dump            dumpxyz all xyz ${xyzfreq} ${NAME}.npt.xyz
-dump_modify     dumpxyz element C H O H C
-fix             aveprop all ave/time 1 1 ${thermofreq} v_density v_temp v_press v_ke v_pe v_etotal v_enthalpy file properties.npt.dat 
+
+# This command maps info from the data file to the atom type so that in the xyz file
+# the proper element name is assigned allowing for OVITO to properly color the atoms
+dump_modify     dumpxyz element C H O H C     
+
+# Tell LAMMPS to create a table of instantaneous properties for convenience.
+# We can analyze this file without having to parse the log file
+fix             aveprop all ave/time 1 1 ${thermofreq} v_density v_temp v_press v_ke v_pe v_etotal v_enthalpy file properties.npt.dat
+
+# How often to collect thermo properties and print in log file
 thermo          ${thermofreq}
 
-## thermostat and integrator
+# Run a short energy minimization to relax the system
 minimize        1e-4 1e-6 10000 10000
 
+# thermostat, barostat, and integrator
 fix             NPT all npt temp ${mytemp} ${mytemp} 100.0 iso ${mypress} ${mypress} 100.0
+
+# Write checkpoint files
 restart         ${restartfreq} restart.${NAME}.1 restart.${NAME}.2
+
+# Start the simulation
 run             ${simlength}
 
-##################################
-# WRITE LAST DATA DATAFILE TO DISK
-##################################
+##########################################
+# WRITE LAST RESTART and DATAFILE TO DISK
+##########################################
 
 write_restart   restart.npt.${NAME}
 write_data      restart.npt.data

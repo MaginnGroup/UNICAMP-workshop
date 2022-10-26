@@ -1,12 +1,19 @@
+#################################################################
+# NVT LAMMPS input file for ethanol. Restart using the proper
+# box size calculated from average density of the NPT run.
+# You must edit the box size in restart.data.
+#################################################################
 # User input information
 variable        NAME index mol               # The prefix of the log and LAMMPS dump file names
 log             ${NAME}.log
 variable        infile index restart.npt.data    # The name of the LAMMPS input data file
-variable        mytemp index 298.00          # The simulation temperature
+variable        mytemp index 298.00          # The simulation temperature K
+
+# Note we do NOT set pressure - we are running NVT
 
 variable        xyzfreq index 1000           # The output frequency of coordinate information
 variable        thermofreq index 1000        # The output frequency of property information
-variable        simlength index 1000000 # Simulation run length  (in timesteps)
+variable        simlength index 10000      # Simulation run length (in timesteps)
 
 variable        restartfreq index 5000       # The output frequency of restart files 
 
@@ -33,7 +40,6 @@ special_bonds   lj/coul 0.0 0.0 0.5
 bond_style      harmonic
 angle_style     harmonic
 dihedral_style  opls 
-# improper_style  cvff  
 
 read_data       ${infile}
 
