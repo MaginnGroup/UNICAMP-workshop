@@ -5,7 +5,7 @@ on simple, short simulations of the Lennard-Jones fluid.
 
 The ethanol directory contains scripts and example input files for conducting
 an NPT equilibration of an OPLS-AA model of ethanol at 298K and 1 atm. Once the
-density is determines, an NVT simulation is run at that density. The output of
+density is determined, an NVT simulation is run at that density. The output of
 this is used by PyLAT to compute the self-diffusivity and radial distribution
 function.
 
